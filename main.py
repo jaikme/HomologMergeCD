@@ -61,6 +61,7 @@ gl = gitlab.Gitlab.from_config('posgitlab', ['.gitlab.cfg'])
 temp = "./temp"
 lock = f"{temp}/homolog.lock.json"
 mrs = None
+paths = []
 
 # TODO Dont work with multiple Merge Requests
 
@@ -75,21 +76,16 @@ def cloneRepoOf(url, name, source_branch):
         shutil.rmtree(project_path)
     print(f"Clone URL -> {url}")
     print(f"Project Path -> {project_path}")
-    print(f"Source branch -> {source_branch}")
+    print(f"Source branch -> {source_branch}\n")
     if not source_branch == "develop":
+        global paths
+        paths.append(project_path)
         Repo.clone_from(url, project_path, branch=source_branch)
 
 
 def total(arr):
     length = len(arr)
     return length
-
-
-def createThread(mr):
-    project = gl.projects.get(mr['project_id'])
-    url = project.http_url_to_repo.replace("http", "https")
-    return threading.Thread(target=cloneRepoOf,
-                            args=(url, project.name, mr['source_branch'],))
 
 
 def runPreCheck():
@@ -122,7 +118,14 @@ def get_merge_requests():
                 mrs.append(mr.__dict__['_attrs'])
 
 
-def main():
+def createThread(mr):
+    project = gl.projects.get(mr['project_id'])
+    url = project.http_url_to_repo.replace("http", "https")
+    return threading.Thread(target=cloneRepoOf,
+                            args=(url, project.name, mr['source_branch'],))
+
+
+def main(cb=None):
     thread = threading.Thread(target=get_merge_requests)
     thread.start()
 
@@ -131,12 +134,27 @@ def main():
     length = total(mrs)
     print(f"Total project to homolog: {length}")
 
+    threads = []
+
     for mr in mrs:
-        createThread(mr).start()
+        threads.append(createThread(mr))
+
+    for x in threads:
+        x.start()
+
+    for x in threads:
+        x.join()
+
+    if cb:
+        cb()
 
     with open(lock, 'w') as outfile:
         json.dump(mrs, outfile, indent=3)
 
 
+def processPaths():
+    print(paths)
+
+
 if __name__ == '__main__':
-    main()
+    main(processPaths)
