@@ -90,6 +90,8 @@ def total(arr):
 
 def runPreCheck():
     if not os.path.isdir(temp):
+        os.mkdir(temp)
+    else:
         shutil.rmtree(temp)
         os.mkdir(temp)
 
@@ -97,7 +99,7 @@ def runPreCheck():
 
 
 def get_merge_requests():
-    runPreCheck()
+
     # if os.path.isfile(lock):
     #     with open(lock) as json_file:
     #         mrs = json.load(json_file)
@@ -126,6 +128,10 @@ def createThread(mr):
 
 
 def main(cb=None):
+    thread = threading.Thread(target=runPreCheck)
+    thread.start()
+    thread.join()
+
     thread = threading.Thread(target=get_merge_requests)
     thread.start()
 
@@ -153,8 +159,10 @@ def main(cb=None):
 
 
 def processPaths():
-    print(paths)
+    for path in paths:
+        print(path)
+        subprocess.check_call('npm --help', shell=True)
 
 
 if __name__ == '__main__':
-    main(processPaths)
+    # main(processPaths)
