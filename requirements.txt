@@ -8,7 +8,7 @@ bottle-websocket==0.2.9
 certifi==2019.11.28
 chardet==3.0.4
 coverage==4.0a5
-Django==1.11.19
+Django==1.11.28
 django-bootstrap-form==3.2
 django-bootstrap-forms==0.1
 django-bower==5.0.2
